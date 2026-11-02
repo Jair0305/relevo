@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relevo · laboratorio de coordinación entre agentes</title>
+    <meta
+      name="description"
+      content="Relevo corre el mismo incidente dos veces, con y sin Concord MCP, y muestra con ejecuciones reales cuándo la coordinación evita perder cambios."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#contenido">Saltar al contenido</a>
+
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Relevo, inicio">
+        <svg class="brand__mark" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="4" y="16" width="32" height="8" rx="4" transform="rotate(-28 20 20)" />
+          <circle cx="9" cy="28" r="3.2" />
+          <circle cx="31" cy="12" r="3.2" />
+        </svg>
+        <span class="brand__name">Relevo</span>
+      </a>
+      <p class="topbar__meta" id="meta-version">laboratorio local · Concord MCP</p>
+    </header>
+
+    <main id="contenido">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__copy">
+          <p class="eyebrow">Un incidente, dos carriles</p>
+          <h1 id="hero-title">Dos agentes, un archivo.<br />¿Quién pierde su cambio?</h1>
+          <p class="lead">
+            Relevo corre el mismo arreglo dos veces en tu máquina: una vez sin coordinación y otra
+            con <strong>Concord MCP</strong>. Los choques, los mensajes y las pruebas que ves salen de
+            procesos reales, no de una animación.
+          </p>
+          <div class="hero__actions">
+            <button type="button" class="btn btn--primary" id="run-button">
+              <span class="btn__label">Correr el laboratorio</span>
+            </button>
+            <button type="button" class="btn btn--ghost" id="capture-button" hidden>
+              Ver una corrida capturada
+            </button>
+          </div>
+          <p class="fineprint" id="run-hint">
+            Tarda unos segundos. Sin IA ni internet: los participantes son
+            <strong>actores de demostración</strong> (scripts con una sola tarea cada uno).
+          </p>
+        </div>
+
+        <aside class="ticket" aria-labelledby="ticket-title">
+          <p class="ticket__head">
+            <span>Soporte · #0211</span><span>Día de Muertos</span>
+          </p>
+          <h2 id="ticket-title" class="ticket__title">Panadería La Espiga <small>(ficticia)</small></h2>
+          <ol class="ticket__bugs">
+            <li>El cupón <code>ESPIGA10</code> también rebaja el envío.</li>
+            <li>Los pedidos de justo <strong>$500</strong> siguen pagando envío.</li>
+          </ol>
+          <p class="ticket__file">Los dos arreglos caen en <code>src/totales.js</code></p>
+          <ul class="cast" aria-label="Participantes">
+            <li class="cast__item" data-actor="caja">
+              <span class="avatar" aria-hidden="true">C</span>
+              <span><strong>Caja</strong> arregla el cupón</span>
+            </li>
+            <li class="cast__item" data-actor="reparto">
+              <span class="avatar" aria-hidden="true">R</span>
+              <span><strong>Reparto</strong> arregla el envío</span>
+            </li>
+            <li class="cast__item" data-actor="revision">
+              <span class="avatar" aria-hidden="true">V</span>
+              <span><strong>Revisión</strong> verifica y cierra</span>
+            </li>
+          </ul>
+          <p class="ticket__foot">Los tres son actores de demostración</p>
+        </aside>
+      </section>
+
+      <div class="banner" id="banner" role="alert" hidden></div>
+
+      <section class="results" id="results" aria-labelledby="results-title" hidden>
+        <div class="results__head">
+          <div>
+            <h2 id="results-title">Lo que pasó</h2>
+            <p class="runinfo" id="run-info"></p>
+          </div>
+          <label class="picker" id="picker" hidden>
+            <span>Corrida</span>
+            <select id="run-select"></select>
+          </label>
+        </div>
+
+        <p class="sr-only" id="live" aria-live="polite"></p>
+
+        <div class="scoreboard" id="scoreboard"></div>
+
+        <section class="lane lane--control" aria-labelledby="control-title">
+          <header class="lane__head">
+            <h3 id="control-title">Carril 1 · Sin coordinar</h3>
+            <p>Caja y Reparto abren el archivo a la vez y cada uno guarda su copia.</p>
+          </header>
+          <ol class="strip" id="control-steps"></ol>
+        </section>
+
+        <section class="lane lane--concord" aria-labelledby="concord-title">
+          <header class="lane__head">
+            <h3 id="concord-title">Carril 2 · Con Concord</h3>
+            <p>
+              Los mismos actores y los mismos cambios. Ahora cada uno habla con su propio proceso
+              <code>concord-mcp</code> y respeta la guardia <code>concord check</code> antes de editar.
+            </p>
+          </header>
+          <div id="concord-steps" class="chapters"></div>
+        </section>
+
+        <section class="checks" aria-labelledby="checks-title">
+          <h3 id="checks-title">Comprobado en esta corrida</h3>
+          <ul id="checks" class="checks__list"></ul>
+        </section>
+
+        <section class="artifacts" aria-labelledby="artifacts-title">
+          <h3 id="artifacts-title">Lo que dejó Concord en el repo</h3>
+          <p class="muted" id="artifacts-note"></p>
+          <div id="artifacts" class="artifacts__grid"></div>
+        </section>
+      </section>
+
+      <section class="limits" aria-labelledby="limits-title">
+        <h2 id="limits-title">Lo que Concord no hace (y conviene saber)</h2>
+        <ul class="limits__list">
+          <li>
+            <strong>Avisa, no bloquea.</strong> Un reclamo con choque se registra igual. Lo que frena la
+            edición es la guardia <code>concord check</code> y que el agente la respete.
+          </li>
+          <li>
+            <strong>No fusiona código.</strong> Ordena quién toca qué y cuándo; releer el archivo después
+            del turno sigue siendo trabajo del agente.
+          </li>
+          <li>
+            <strong>Sin adaptador en vivo, los mensajes esperan.</strong> Quedan en cola hasta que el
+            destinatario revisa su bandeja. Aquí ningún actor tiene adaptador, a propósito.
+          </li>
+          <li>
+            <strong>Las caídas no se notan al instante.</strong> La presencia pasa a inactiva a los 5
+            minutos y a ausente a los 30.
+          </li>
+          <li>
+            <strong>La identidad la pone quien lanza el proceso.</strong> Es una herramienta local, no
+            una frontera de seguridad entre agentes.
+          </li>
+          <li>
+            <strong>Telemetría activa por defecto.</strong> Concord envía métricas sin contenido a
+            getconcord.ai salvo <code>CONCORD_TELEMETRY_DISABLED=1</code>. Relevo la apaga y además
+            bloquea la red de esos procesos.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Relevo es un proyecto independiente para explorar
+        <a href="https://github.com/get-concord-ai/concord-mcp" rel="noreferrer">Concord MCP</a>
+        (licencia MIT, © Concord AI). No está afiliado a Concord AI.
+      </p>
+      <p>
+        Las corridas se guardan solo en la carpeta <code>data/</code> de esta app.
+        <button type="button" class="linkbtn" id="reset-button">Borrar corridas locales</button>
+      </p>
+    </footer>
+
+    <dialog class="confirm" id="reset-dialog" aria-labelledby="reset-title">
+      <div class="confirm__body">
+        <h2 id="reset-title">¿Borrar las corridas locales?</h2>
+        <p>Se borra la carpeta <code>data/runs</code> de Relevo. Las capturas incluidas no se tocan.</p>
+        <div class="confirm__actions">
+          <button type="button" class="btn btn--ghost" id="reset-cancel">Cancelar</button>
+          <button type="button" class="btn btn--danger" id="reset-confirm">Borrar</button>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>

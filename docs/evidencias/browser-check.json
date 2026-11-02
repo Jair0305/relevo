@@ -1,0 +1,71 @@
+{
+  "at": "2026-11-02T03:50:36.655Z",
+  "browser": "Edge/Chrome headless (playwright-core, perfil temporal)",
+  "results": [
+    {
+      "name": "Abre con la repetición capturada",
+      "ok": true,
+      "detail": "Etiqueta: Repetición"
+    },
+    {
+      "name": "El primer Tab llega al enlace para saltar",
+      "ok": true,
+      "detail": "Saltar al contenido"
+    },
+    {
+      "name": "La corrida real termina en la página",
+      "ok": true,
+      "detail": "Etiqueta final: Corrida local"
+    },
+    {
+      "name": "Comprobaciones de la corrida",
+      "ok": true,
+      "detail": "9/9 cumplidas"
+    },
+    {
+      "name": "Marcador: sin coordinar pierde, con Concord no",
+      "ok": true,
+      "detail": "3/4pruebas pasan vs 4/4pruebas pasan"
+    },
+    {
+      "name": "Se ven todos los pasos",
+      "ok": true,
+      "detail": "36 pasos en la línea de tiempo"
+    },
+    {
+      "name": "El detalle muestra la respuesta real de Concord",
+      "ok": true,
+      "detail": "Texto contiene «same file(s): src/totales.js»"
+    },
+    {
+      "name": "Todos los controles tienen nombre accesible",
+      "ok": true,
+      "detail": "0 sin nombre"
+    },
+    {
+      "name": "Un solo h1 y landmarks principales",
+      "ok": true,
+      "detail": "h1: 1"
+    },
+    {
+      "name": "Borrar corridas vuelve a la repetición",
+      "ok": true,
+      "detail": "Aviso visible y vista de captura"
+    },
+    {
+      "name": "Sin errores en consola",
+      "ok": true,
+      "detail": "ninguno"
+    },
+    {
+      "name": "Sin desbordamiento horizontal en móvil",
+      "ok": true,
+      "detail": "0 px extra"
+    },
+    {
+      "name": "Error visible si el servidor no responde",
+      "ok": true,
+      "detail": "Aviso con botón Reintentar"
+    }
+  ]
+}

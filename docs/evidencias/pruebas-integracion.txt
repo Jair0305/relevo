@@ -1,0 +1,23 @@
+▶ Concord 0.19.0 en el sandbox de Relevo
+  ✔ detecta el choque de reserva, no lo bloquea, y concord check lo hace cumplir (4939.2438ms)
+  ✔ entrega mensajes por cola con acuse, y la bandeja es privada (1695.0342ms)
+  ✔ una sesión nueva recupera lo anotado antes de que la anterior se cayera (1789.5969ms)
+  ✔ el relevo exige versión vigente, rechaza el duplicado y deja historial (1737.9333ms)
+  ✔ el sandbox impide que Concord salga de la carpeta de la corrida (459.3523ms)
+  ✔ la guardia de red bloquea fetch y sockets pero deja pasar URLs data: (113.197ms)
+✔ Concord 0.19.0 en el sandbox de Relevo (10735.396ms)
+▶ servidor de Relevo
+  ✔ rechaza hosts ajenos, escrituras sin intención y orígenes cruzados (39.7276ms)
+  ✔ solo sirve archivos de su lista y con CSP (11.1992ms)
+  ✔ en modo repetición no lanza corridas (4.5651ms)
+  ✔ ejecuta una corrida real completa y la guarda sin rutas locales (10251.4388ms)
+  ✔ reiniciar borra solo data/runs (12.9359ms)
+✔ servidor de Relevo (10320.7969ms)
+ℹ tests 11
+ℹ suites 2
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 22190.2436

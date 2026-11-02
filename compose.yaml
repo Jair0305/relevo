@@ -1,0 +1,30 @@
+# Relevo en un servidor propio. Por defecto SOLO escucha en el loopback del
+# host (127.0.0.1:4317): para verlo desde fuera, ponlo detrás de tu proxy
+# inverso con autenticación, o usa un túnel SSH. Ver docs/SERVIDOR_PROPIO.md.
+services:
+  relevo:
+    build: .
+    image: relevo-lab:0.1.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4317:4317"
+    environment:
+      # Host(s) con los que llegarán las peticiones (cabecera Host).
+      RELEVO_ALLOWED_HOSTS: "localhost:4317,127.0.0.1:4317"
+      # 1 = solo repeticiones (recomendado si lo expones a Internet).
+      RELEVO_READONLY: "0"
+      RELEVO_MAX_RUNS_PER_HOUR: "30"
+    volumes:
+      - relevo-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 512m
+    cpus: 1.0
+
+volumes:
+  relevo-data:

@@ -1,0 +1,2004 @@
+{
+  "schema": 1,
+  "id": "r-20261102-033035-8d7a8d",
+  "source": "capture",
+  "status": "done",
+  "startedAt": "2026-11-02T03:30:35.201Z",
+  "finishedAt": "2026-11-02T03:30:45.913Z",
+  "environment": {
+    "concordVersion": "0.19.0",
+    "node": "v22.20.0",
+    "platform": "win32"
+  },
+  "steps": [
+    {
+      "actor": "relevo",
+      "kind": "session",
+      "title": "Repo de La Espiga listo",
+      "detail": "Copia limpia con los dos fallos y un commit «base». En este carril no hay Concord.",
+      "ok": true,
+      "n": 1,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:35.888Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "read",
+      "title": "Caja lee src/totales.js",
+      "detail": "Abre el archivo para corregir el cupón.",
+      "ok": true,
+      "n": 2,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:35.890Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "read",
+      "title": "Reparto lee el mismo archivo",
+      "detail": "Al mismo tiempo, sin saber que Caja está ahí.",
+      "ok": true,
+      "n": 3,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:35.891Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "edit",
+      "title": "Caja guarda su arreglo",
+      "detail": "El cupón ya solo descuenta productos.",
+      "ok": true,
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..a38518c 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -9,7 +9,7 @@ export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n   const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n-  const descuento = redondear((subtotal + envio) * tasa);\n+  const descuento = redondear(subtotal * tasa); // el cupón no aplica al envío\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };\n }",
+      "n": 4,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:37.028Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "edit",
+      "title": "Reparto guarda su copia encima",
+      "detail": "Su copia era anterior al arreglo de Caja: el cupón vuelve a estar roto. Git no se queja.",
+      "ok": false,
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..eccee6f 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -7,7 +7,7 @@ export const CUPONES = { ESPIGA10: 0.1 };\n \n export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n-  const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n+  const envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n   const descuento = redondear((subtotal + envio) * tasa);\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };",
+      "n": 5,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:38.124Z"
+    },
+    {
+      "actor": "relevo",
+      "kind": "tests",
+      "title": "Pruebas finales",
+      "detail": "3 de 4 pruebas pasan",
+      "ok": false,
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 1,
+        "passed": 3,
+        "failed": 1,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": false,
+            "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n{\n+   descuento: 27.9,\n-   descuento: 20,\nenvio: 79,\nsubtotal: 200,\n+   total: 251.1"
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 160
+      },
+      "n": 6,
+      "lane": "control",
+      "phase": "sin-coordinar",
+      "at": "2026-11-02T03:30:38.287Z"
+    },
+    {
+      "actor": "relevo",
+      "kind": "session",
+      "title": "Mismo repo, ahora con Concord",
+      "detail": "Cada actor tiene su propio proceso concord-mcp (MCP por stdio). Herramientas anunciadas: start_work, inspect_work, update_work, transfer_work, finish_work.",
+      "ok": true,
+      "n": 7,
+      "lane": "concord",
+      "phase": "reclamar",
+      "at": "2026-11-02T03:30:40.211Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja reclama src/totales.js",
+      "detail": "Declara qué archivo va a tocar antes de editar.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "start_work",
+        "args": {
+          "task_id": "T-CUPON",
+          "title": "El cupón ESPIGA10 no debe descontar el envío",
+          "kind": "actor-demo",
+          "owner": "laboratorio-relevo",
+          "expected_files": [
+            "src/totales.js"
+          ],
+          "modules": [
+            "checkout"
+          ],
+          "domains": [
+            "promociones"
+          ]
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nStarted T-CUPON; status active, version 1, 0 overlap(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "task_id": "T-CUPON",
+          "status": "active",
+          "version": 1,
+          "updated_at": "2026-11-02T03:30:40.225Z",
+          "agent_id": "caja",
+          "assigned_agent_id": null,
+          "lease_expires_at": null,
+          "resumed_by": "new_claim",
+          "overlaps": [],
+          "breadth_reasons": []
+        },
+        "durationMs": 30,
+        "at": "2026-11-02T03:30:40.213Z"
+      },
+      "n": 8,
+      "lane": "concord",
+      "phase": "reclamar",
+      "at": "2026-11-02T03:30:40.243Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Concord avisa: choque en el mismo archivo",
+      "detail": "Choque con T-CUPON: same file(s): src/totales.js; shared module(s): checkout; shared domain(s): promociones. Ojo: el reclamo se registra igual; Concord avisa, no bloquea.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "start_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "title": "Envío gratis también en pedidos de exactamente $500",
+          "kind": "actor-demo",
+          "owner": "laboratorio-relevo",
+          "expected_files": [
+            "src/totales.js"
+          ],
+          "modules": [
+            "checkout"
+          ],
+          "domains": [
+            "promociones"
+          ]
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nStarted T-ENVIO; status active, version 1, 1 overlap(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "task_id": "T-ENVIO",
+          "status": "active",
+          "version": 1,
+          "updated_at": "2026-11-02T03:30:40.258Z",
+          "agent_id": "reparto",
+          "assigned_agent_id": null,
+          "lease_expires_at": null,
+          "resumed_by": "new_claim",
+          "overlaps": [
+            {
+              "task_id": "T-CUPON",
+              "title": "El cupón ESPIGA10 no debe descontar el envío",
+              "reasons": [
+                "same file(s): src/totales.js",
+                "shared module(s): checkout",
+                "shared domain(s): promociones"
+              ]
+            }
+          ],
+          "breadth_reasons": []
+        },
+        "durationMs": 19,
+        "at": "2026-11-02T03:30:40.245Z"
+      },
+      "n": 9,
+      "lane": "concord",
+      "phase": "reclamar",
+      "at": "2026-11-02T03:30:40.264Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "guard",
+      "title": "La guardia frena a Reparto",
+      "detail": "concord check sale con código 1. La política del actor: no editar hasta que salga 0.",
+      "ok": true,
+      "guard": {
+        "command": "concord check --task T-ENVIO src/totales.js",
+        "exitCode": 1,
+        "output": "Overlap: files you are about to edit collide with 1 active task(s):\n  - T-CUPON (El cupón ESPIGA10 no debe descontar el envío): same file(s): src/totales.js\nConcord workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)"
+      },
+      "n": 10,
+      "lane": "concord",
+      "phase": "reclamar",
+      "at": "2026-11-02T03:30:41.237Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Reparto le escribe a Caja",
+      "detail": "Mensaje enviado (✓) y en cola: Caja no tiene un adaptador en vivo, lo verá cuando revise su bandeja.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "update_work",
+        "args": {
+          "operation": "prompt",
+          "to_agent_id": "caja",
+          "task_id": "T-ENVIO",
+          "content": "Necesito cambiar la condición de envío gratis en src/totales.js (línea de `envio`). ¿Me avisas cuando liberes el archivo?",
+          "idempotency_key": "r-20261102-033035-8d7a8d-reparto-pide-turno"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nprompt e6e35096-39c2-4d11-936a-fb1b642cec12 to caja: ✓ sent 2026-11-02T03:30:41.241Z; not delivered yet (expires 2026-11-03T03:30:41.241Z). Sent (✓) and queued: caja has no live session to take it now. It will be delivered when that agent's session next checks in, or fail as expired at 2026-11-03T03:30:41.241Z. Check its receipt with inspect_work message_id.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "operation": "prompt",
+          "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+          "status": "sent",
+          "sender_agent_id": "reparto",
+          "recipient_agent_id": "caja",
+          "reply_to_message_id": null,
+          "task_id": "T-ENVIO",
+          "task_updated_at": "2026-11-02T03:30:41.244Z",
+          "provider": null,
+          "provider_receipt": null,
+          "delivered_at": null,
+          "receipt": {
+            "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+            "status": "sent",
+            "ticks": "✓",
+            "sent_at": "2026-11-02T03:30:41.241Z",
+            "delivered_at": null,
+            "read_at": null,
+            "replied_at": null,
+            "failed_at": null,
+            "error_code": null,
+            "expires_at": "2026-11-03T03:30:41.241Z"
+          },
+          "idempotent_replay": false,
+          "delivery": "queued_pull",
+          "immediate_mode": null,
+          "outlook": "Sent (✓) and queued: caja has no live session to take it now. It will be delivered when that agent's session next checks in, or fail as expired at 2026-11-03T03:30:41.241Z. Check its receipt with inspect_work message_id."
+        },
+        "durationMs": 8,
+        "at": "2026-11-02T03:30:41.239Z"
+      },
+      "n": 11,
+      "lane": "concord",
+      "phase": "hablar",
+      "at": "2026-11-02T03:30:41.247Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja revisa su bandeja",
+      "detail": "El mensaje de Reparto pasa a «read» con hora de lectura registrada.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "inspect_work",
+        "args": {
+          "agent_id": "caja"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\ncaja; promptable false, 1 inbox message(s), 0 outbox message(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "agent",
+          "agentId": "caja",
+          "promptable": false,
+          "provider": null,
+          "capabilities": [],
+          "awaitingUserSince": null,
+          "private": false,
+          "inbox": [
+            {
+              "messageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "reparto",
+              "recipientAgentId": "caja",
+              "replyToMessageId": null,
+              "content": "Necesito cambiar la condición de envío gratis en src/totales.js (línea de `envio`). ¿Me avisas cuando liberes el archivo?",
+              "deliveryMode": "steer",
+              "status": "read",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-reparto-pide-turno",
+              "createdAt": "2026-11-02T03:30:41.241Z",
+              "deliveredAt": "2026-11-02T03:30:41.253Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:41.253Z",
+              "repliedAt": null,
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.241Z",
+              "receipt": {
+                "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+                "status": "read",
+                "ticks": "read",
+                "sent_at": "2026-11-02T03:30:41.241Z",
+                "delivered_at": "2026-11-02T03:30:41.253Z",
+                "read_at": "2026-11-02T03:30:41.253Z",
+                "replied_at": null,
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.241Z"
+              }
+            }
+          ],
+          "outbox": []
+        },
+        "durationMs": 5,
+        "at": "2026-11-02T03:30:41.249Z"
+      },
+      "n": 12,
+      "lane": "concord",
+      "phase": "hablar",
+      "at": "2026-11-02T03:30:41.254Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja responde",
+      "detail": "La respuesta queda enlazada al mensaje original.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "update_work",
+        "args": {
+          "operation": "reply",
+          "reply_to_message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+          "content": "Va. Termino el cupón, corro pruebas y lo marco listo para revisión; tu prueba de envío seguirá fallando hasta que entre tu cambio.",
+          "idempotency_key": "r-20261102-033035-8d7a8d-caja-responde"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nreply 374eacea-cf74-4022-93d5-3e451bbb90cf to reparto: ✓ sent 2026-11-02T03:30:41.258Z; not delivered yet (expires 2026-11-03T03:30:41.258Z). Sent (✓) and queued: reparto has no live session to take it now. It will be delivered when that agent's session next checks in, or fail as expired at 2026-11-03T03:30:41.258Z. Check its receipt with inspect_work message_id.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "operation": "reply",
+          "message_id": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+          "status": "sent",
+          "sender_agent_id": "caja",
+          "recipient_agent_id": "reparto",
+          "reply_to_message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+          "task_id": "T-ENVIO",
+          "task_updated_at": "2026-11-02T03:30:41.258Z",
+          "provider": null,
+          "provider_receipt": null,
+          "delivered_at": null,
+          "receipt": {
+            "message_id": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+            "status": "sent",
+            "ticks": "✓",
+            "sent_at": "2026-11-02T03:30:41.258Z",
+            "delivered_at": null,
+            "read_at": null,
+            "replied_at": null,
+            "failed_at": null,
+            "error_code": null,
+            "expires_at": "2026-11-03T03:30:41.258Z"
+          },
+          "idempotent_replay": false,
+          "delivery": "queued_pull",
+          "immediate_mode": null,
+          "outlook": "Sent (✓) and queued: reparto has no live session to take it now. It will be delivered when that agent's session next checks in, or fail as expired at 2026-11-03T03:30:41.258Z. Check its receipt with inspect_work message_id."
+        },
+        "durationMs": 6,
+        "at": "2026-11-02T03:30:41.255Z"
+      },
+      "n": 13,
+      "lane": "concord",
+      "phase": "hablar",
+      "at": "2026-11-02T03:30:41.261Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja deja anotada su decisión",
+      "detail": "Memoria de la tarea: sobrevive a la sesión.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "update_work",
+        "args": {
+          "task_id": "T-CUPON",
+          "kind": "decision",
+          "content": "El descuento del cupón se calcula solo sobre productos; el envío nunca se descuenta."
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nRecorded decision for T-CUPON.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "operation": "record",
+          "update_id": 1,
+          "task_id": "T-CUPON",
+          "kind": "decision",
+          "content": "El descuento del cupón se calcula solo sobre productos; el envío nunca se descuenta.",
+          "agent": "caja",
+          "created_at": "2026-11-02T03:30:41.264Z",
+          "task_updated_at": "2026-11-02T03:30:41.265Z"
+        },
+        "durationMs": 4,
+        "at": "2026-11-02T03:30:41.263Z"
+      },
+      "n": 14,
+      "lane": "concord",
+      "phase": "hablar",
+      "at": "2026-11-02T03:30:41.267Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "edit",
+      "title": "Caja guarda su arreglo",
+      "detail": "Nadie más tocó el archivo mientras lo tenía reclamado.",
+      "ok": true,
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..a38518c 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -9,7 +9,7 @@ export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n   const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n-  const descuento = redondear((subtotal + envio) * tasa);\n+  const descuento = redondear(subtotal * tasa); // el cupón no aplica al envío\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };\n }",
+      "n": 15,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:42.307Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "tests",
+      "title": "Caja corre las pruebas",
+      "detail": "3 de 4 pruebas pasan. La que falla es la de envío, que no es suya.",
+      "ok": true,
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 1,
+        "passed": 3,
+        "failed": 1,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": false,
+            "reason": "Expected values to be strictly equal:\n79 !== 0"
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 148
+      },
+      "n": 16,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:42.458Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja consulta T-CUPON",
+      "detail": "Estado active, versión 1. Las transiciones exigen la versión vigente.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "inspect_work",
+        "args": {
+          "task_id": "T-CUPON"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nT-CUPON; status active, version 1, 1 update(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "task",
+          "task": {
+            "taskId": "T-CUPON",
+            "title": "El cupón ESPIGA10 no debe descontar el envío",
+            "owner": "laboratorio-relevo",
+            "agent": "actor-demo",
+            "branch": null,
+            "worktree": null,
+            "expectedFiles": [
+              "src/totales.js"
+            ],
+            "modules": [
+              "checkout"
+            ],
+            "domains": [
+              "promociones"
+            ],
+            "riskTags": [],
+            "notes": null,
+            "status": "active",
+            "parentTaskId": null,
+            "agentId": "caja",
+            "version": 1,
+            "assignedAgentId": null,
+            "leaseExpiresAt": null,
+            "createdAt": "2026-11-02T03:30:40.225Z",
+            "updatedAt": "2026-11-02T03:30:41.265Z"
+          },
+          "owner_liveness": "live",
+          "updates": [
+            {
+              "id": 1,
+              "taskId": "T-CUPON",
+              "kind": "decision",
+              "content": "El descuento del cupón se calcula solo sobre productos; el envío nunca se descuenta.",
+              "agent": "caja",
+              "createdAt": "2026-11-02T03:30:41.264Z"
+            }
+          ],
+          "latest_handoff": null,
+          "latest_review": null,
+          "pending_handoff": null,
+          "ownership_history": [],
+          "overlaps": [
+            {
+              "taskId": "T-ENVIO",
+              "title": "Envío gratis también en pedidos de exactamente $500",
+              "reasons": [
+                "same file(s): src/totales.js",
+                "shared module(s): checkout",
+                "shared domain(s): promociones"
+              ],
+              "kinds": [
+                "same_file",
+                "shared_module",
+                "shared_domain"
+              ]
+            }
+          ],
+          "messages": []
+        },
+        "durationMs": 4,
+        "at": "2026-11-02T03:30:42.460Z"
+      },
+      "n": 17,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:42.464Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Caja marca su parte lista para revisión",
+      "detail": "finish_work genera el paquete de revisión y libera el archivo.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "finish_work",
+        "args": {
+          "task_id": "T-CUPON",
+          "expected_version": 1,
+          "outcome": "review_ready",
+          "what_changed": "El cupón ESPIGA10 descuenta solo el subtotal de productos.",
+          "changed_files": [
+            "src/totales.js"
+          ],
+          "tests_run": [
+            "node --test-reporter=tap tests/totales.test.js → 3 de 4 pruebas pasan"
+          ],
+          "decisions": [
+            "El envío nunca se descuenta con cupones."
+          ],
+          "known_risks": [
+            "La prueba de envío gratis sigue fallando: es la tarea T-ENVIO de Reparto."
+          ],
+          "next_steps": [
+            "Reparto corrige el umbral de envío gratis sobre esta versión."
+          ],
+          "needs_review_from": [
+            "revision"
+          ]
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nFinished T-CUPON; status review_ready, version 2.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "task_id": "T-CUPON",
+          "status": "review_ready",
+          "version": 2,
+          "updated_at": "2026-11-02T03:30:42.473Z",
+          "agent_id": "caja",
+          "assigned_agent_id": null,
+          "lease_expires_at": null,
+          "outcome": "review_ready",
+          "handoff_id": 1,
+          "review_ready": true
+        },
+        "durationMs": 13,
+        "at": "2026-11-02T03:30:42.466Z"
+      },
+      "n": 18,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:42.480Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Reparto lee la respuesta",
+      "detail": "Respuesta de Caja: «read».",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "inspect_work",
+        "args": {
+          "agent_id": "reparto"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nreparto; promptable false, 1 inbox message(s), 1 outbox message(s)\nSent:\n- e6e35096-39c2-4d11-936a-fb1b642cec12 to caja: replied.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "agent",
+          "agentId": "reparto",
+          "promptable": false,
+          "provider": null,
+          "capabilities": [],
+          "awaitingUserSince": null,
+          "private": false,
+          "inbox": [
+            {
+              "messageId": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "caja",
+              "recipientAgentId": "reparto",
+              "replyToMessageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "content": "Va. Termino el cupón, corro pruebas y lo marco listo para revisión; tu prueba de envío seguirá fallando hasta que entre tu cambio.",
+              "deliveryMode": "steer",
+              "status": "read",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-caja-responde",
+              "createdAt": "2026-11-02T03:30:41.258Z",
+              "deliveredAt": "2026-11-02T03:30:42.484Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:42.484Z",
+              "repliedAt": null,
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.258Z",
+              "receipt": {
+                "message_id": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+                "status": "read",
+                "ticks": "read",
+                "sent_at": "2026-11-02T03:30:41.258Z",
+                "delivered_at": "2026-11-02T03:30:42.484Z",
+                "read_at": "2026-11-02T03:30:42.484Z",
+                "replied_at": null,
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.258Z"
+              }
+            }
+          ],
+          "outbox": [
+            {
+              "messageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "reparto",
+              "recipientAgentId": "caja",
+              "replyToMessageId": null,
+              "content": "Necesito cambiar la condición de envío gratis en src/totales.js (línea de `envio`). ¿Me avisas cuando liberes el archivo?",
+              "deliveryMode": "steer",
+              "status": "replied",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-reparto-pide-turno",
+              "createdAt": "2026-11-02T03:30:41.241Z",
+              "deliveredAt": "2026-11-02T03:30:41.253Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:41.253Z",
+              "repliedAt": "2026-11-02T03:30:41.258Z",
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.241Z",
+              "receipt": {
+                "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+                "status": "replied",
+                "ticks": "replied",
+                "sent_at": "2026-11-02T03:30:41.241Z",
+                "delivered_at": "2026-11-02T03:30:41.253Z",
+                "read_at": "2026-11-02T03:30:41.253Z",
+                "replied_at": "2026-11-02T03:30:41.258Z",
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.241Z"
+              }
+            }
+          ]
+        },
+        "durationMs": 3,
+        "at": "2026-11-02T03:30:42.482Z"
+      },
+      "n": 19,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:42.485Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "guard",
+      "title": "La guardia ya deja pasar",
+      "detail": "concord check sale con 0: la tarea de Caja ya no reclama el archivo.",
+      "ok": true,
+      "guard": {
+        "command": "concord check --task T-ENVIO src/totales.js",
+        "exitCode": 0,
+        "output": "OK: none of the 1 file(s) overlap another active task.\nConcord workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)"
+      },
+      "n": 20,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:43.425Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Reparto anota su plan",
+      "detail": "Antes de editar deja escrito qué va a hacer.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "update_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "kind": "intent",
+          "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500."
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nRecorded intent for T-ENVIO.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "operation": "record",
+          "update_id": 2,
+          "task_id": "T-ENVIO",
+          "kind": "intent",
+          "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500.",
+          "agent": "reparto",
+          "created_at": "2026-11-02T03:30:43.429Z",
+          "task_updated_at": "2026-11-02T03:30:43.430Z"
+        },
+        "durationMs": 18,
+        "at": "2026-11-02T03:30:43.428Z"
+      },
+      "n": 21,
+      "lane": "concord",
+      "phase": "turnos",
+      "at": "2026-11-02T03:30:43.446Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "session",
+      "title": "Se cae la sesión de Reparto",
+      "detail": "Relevo termina su proceso concord-mcp a la fuerza. Lo que tenía en memoria se pierde.",
+      "ok": true,
+      "n": 22,
+      "lane": "concord",
+      "phase": "caida",
+      "at": "2026-11-02T03:30:43.455Z"
+    },
+    {
+      "actor": "caja",
+      "kind": "concord",
+      "title": "Así ve Concord a Reparto tras la caída",
+      "detail": "Presencia de Reparto: «live». Concord no detecta caídas al instante: la presencia pasa a inactiva a los 5 min y a ausente a los 30.",
+      "ok": true,
+      "call": {
+        "agentId": "caja",
+        "tool": "inspect_work",
+        "args": {},
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\n1 active task(s), 0 overlap(s), 2 registered agent(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "workspace",
+          "presence": [
+            {
+              "agentId": "reparto",
+              "kind": "actor-demo",
+              "owner": "laboratorio-relevo",
+              "summary": "Envío gratis también en pedidos de exactamente $500",
+              "status": "active",
+              "liveness": "live",
+              "lastSeen": "2026-11-02T03:30:43.431Z",
+              "ageSeconds": 0
+            },
+            {
+              "agentId": "caja",
+              "kind": "actor-demo",
+              "owner": "laboratorio-relevo",
+              "summary": "El cupón ESPIGA10 no debe descontar el envío",
+              "status": "active",
+              "liveness": "live",
+              "lastSeen": "2026-11-02T03:30:42.471Z",
+              "ageSeconds": 0
+            }
+          ],
+          "active": [
+            {
+              "taskId": "T-ENVIO",
+              "agent": "actor-demo",
+              "agentId": "reparto",
+              "assignedAgentId": null,
+              "status": "active",
+              "version": 1,
+              "updatedAt": "2026-11-02T03:30:43.430Z",
+              "branch": "-",
+              "touches": "checkout",
+              "parentTaskId": null
+            }
+          ],
+          "overlaps": [],
+          "stale_claims": [],
+          "review_ready": [
+            {
+              "taskId": "T-CUPON",
+              "testsCount": 1,
+              "guardrailsCount": 0,
+              "openQuestionCount": 0
+            }
+          ],
+          "open_questions": [],
+          "communications": [
+            {
+              "agentId": "caja",
+              "promptable": false,
+              "provider": null,
+              "capabilities": [],
+              "awaitingUserSince": null
+            },
+            {
+              "agentId": "reparto",
+              "promptable": false,
+              "provider": null,
+              "capabilities": [],
+              "awaitingUserSince": null
+            }
+          ]
+        },
+        "durationMs": 4,
+        "at": "2026-11-02T03:30:43.457Z"
+      },
+      "n": 23,
+      "lane": "concord",
+      "phase": "caida",
+      "at": "2026-11-02T03:30:43.461Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Una sesión nueva de Reparto retoma",
+      "detail": "Proceso nuevo, misma identidad. Recupera 1 nota(s) y 2 mensaje(s) de la tarea desde Concord.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "inspect_work",
+        "args": {
+          "task_id": "T-ENVIO"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nT-ENVIO; status active, version 1, 1 update(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "task",
+          "task": {
+            "taskId": "T-ENVIO",
+            "title": "Envío gratis también en pedidos de exactamente $500",
+            "owner": "laboratorio-relevo",
+            "agent": "actor-demo",
+            "branch": null,
+            "worktree": null,
+            "expectedFiles": [
+              "src/totales.js"
+            ],
+            "modules": [
+              "checkout"
+            ],
+            "domains": [
+              "promociones"
+            ],
+            "riskTags": [],
+            "notes": null,
+            "status": "active",
+            "parentTaskId": null,
+            "agentId": "reparto",
+            "version": 1,
+            "assignedAgentId": null,
+            "leaseExpiresAt": null,
+            "createdAt": "2026-11-02T03:30:40.258Z",
+            "updatedAt": "2026-11-02T03:30:43.430Z"
+          },
+          "owner_liveness": "live",
+          "updates": [
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "kind": "intent",
+              "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500.",
+              "agent": "reparto",
+              "createdAt": "2026-11-02T03:30:43.429Z"
+            }
+          ],
+          "latest_handoff": null,
+          "latest_review": null,
+          "pending_handoff": null,
+          "ownership_history": [],
+          "overlaps": [],
+          "messages": [
+            {
+              "messageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "reparto",
+              "recipientAgentId": "caja",
+              "replyToMessageId": null,
+              "content": "Necesito cambiar la condición de envío gratis en src/totales.js (línea de `envio`). ¿Me avisas cuando liberes el archivo?",
+              "deliveryMode": "steer",
+              "status": "replied",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-reparto-pide-turno",
+              "createdAt": "2026-11-02T03:30:41.241Z",
+              "deliveredAt": "2026-11-02T03:30:41.253Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:41.253Z",
+              "repliedAt": "2026-11-02T03:30:41.258Z",
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.241Z",
+              "receipt": {
+                "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+                "status": "replied",
+                "ticks": "replied",
+                "sent_at": "2026-11-02T03:30:41.241Z",
+                "delivered_at": "2026-11-02T03:30:41.253Z",
+                "read_at": "2026-11-02T03:30:41.253Z",
+                "replied_at": "2026-11-02T03:30:41.258Z",
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.241Z"
+              }
+            },
+            {
+              "messageId": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "caja",
+              "recipientAgentId": "reparto",
+              "replyToMessageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "content": "Va. Termino el cupón, corro pruebas y lo marco listo para revisión; tu prueba de envío seguirá fallando hasta que entre tu cambio.",
+              "deliveryMode": "steer",
+              "status": "read",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-caja-responde",
+              "createdAt": "2026-11-02T03:30:41.258Z",
+              "deliveredAt": "2026-11-02T03:30:42.484Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:42.484Z",
+              "repliedAt": null,
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.258Z",
+              "receipt": {
+                "message_id": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+                "status": "read",
+                "ticks": "read",
+                "sent_at": "2026-11-02T03:30:41.258Z",
+                "delivered_at": "2026-11-02T03:30:42.484Z",
+                "read_at": "2026-11-02T03:30:42.484Z",
+                "replied_at": null,
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.258Z"
+              }
+            }
+          ]
+        },
+        "durationMs": 12,
+        "at": "2026-11-02T03:30:43.969Z"
+      },
+      "n": 24,
+      "lane": "concord",
+      "phase": "caida",
+      "at": "2026-11-02T03:30:43.981Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "edit",
+      "title": "Reparto relee y guarda",
+      "detail": "Su copia ya traía el arreglo de Caja: los dos cambios conviven.",
+      "ok": true,
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..275a9c2 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -7,9 +7,9 @@ export const CUPONES = { ESPIGA10: 0.1 };\n \n export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n-  const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n+  const envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n-  const descuento = redondear((subtotal + envio) * tasa);\n+  const descuento = redondear(subtotal * tasa); // el cupón no aplica al envío\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };\n }",
+      "n": 25,
+      "lane": "concord",
+      "phase": "caida",
+      "at": "2026-11-02T03:30:44.917Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "tests",
+      "title": "Reparto corre las pruebas",
+      "detail": "4 de 4 pruebas pasan",
+      "ok": true,
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 0,
+        "passed": 4,
+        "failed": 0,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 136
+      },
+      "n": 26,
+      "lane": "concord",
+      "phase": "caida",
+      "at": "2026-11-02T03:30:45.056Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Reparto consulta T-ENVIO",
+      "detail": "Estado active, versión 1. Las transiciones exigen la versión vigente.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "inspect_work",
+        "args": {
+          "task_id": "T-ENVIO"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nT-ENVIO; status active, version 1, 1 update(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "task",
+          "task": {
+            "taskId": "T-ENVIO",
+            "title": "Envío gratis también en pedidos de exactamente $500",
+            "owner": "laboratorio-relevo",
+            "agent": "actor-demo",
+            "branch": null,
+            "worktree": null,
+            "expectedFiles": [
+              "src/totales.js"
+            ],
+            "modules": [
+              "checkout"
+            ],
+            "domains": [
+              "promociones"
+            ],
+            "riskTags": [],
+            "notes": null,
+            "status": "active",
+            "parentTaskId": null,
+            "agentId": "reparto",
+            "version": 1,
+            "assignedAgentId": null,
+            "leaseExpiresAt": null,
+            "createdAt": "2026-11-02T03:30:40.258Z",
+            "updatedAt": "2026-11-02T03:30:43.430Z"
+          },
+          "owner_liveness": "live",
+          "updates": [
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "kind": "intent",
+              "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500.",
+              "agent": "reparto",
+              "createdAt": "2026-11-02T03:30:43.429Z"
+            }
+          ],
+          "latest_handoff": null,
+          "latest_review": null,
+          "pending_handoff": null,
+          "ownership_history": [],
+          "overlaps": [],
+          "messages": [
+            {
+              "messageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "reparto",
+              "recipientAgentId": "caja",
+              "replyToMessageId": null,
+              "content": "Necesito cambiar la condición de envío gratis en src/totales.js (línea de `envio`). ¿Me avisas cuando liberes el archivo?",
+              "deliveryMode": "steer",
+              "status": "replied",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-reparto-pide-turno",
+              "createdAt": "2026-11-02T03:30:41.241Z",
+              "deliveredAt": "2026-11-02T03:30:41.253Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:41.253Z",
+              "repliedAt": "2026-11-02T03:30:41.258Z",
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.241Z",
+              "receipt": {
+                "message_id": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+                "status": "replied",
+                "ticks": "replied",
+                "sent_at": "2026-11-02T03:30:41.241Z",
+                "delivered_at": "2026-11-02T03:30:41.253Z",
+                "read_at": "2026-11-02T03:30:41.253Z",
+                "replied_at": "2026-11-02T03:30:41.258Z",
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.241Z"
+              }
+            },
+            {
+              "messageId": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+              "project": "",
+              "taskId": "T-ENVIO",
+              "senderAgentId": "caja",
+              "recipientAgentId": "reparto",
+              "replyToMessageId": "e6e35096-39c2-4d11-936a-fb1b642cec12",
+              "content": "Va. Termino el cupón, corro pruebas y lo marco listo para revisión; tu prueba de envío seguirá fallando hasta que entre tu cambio.",
+              "deliveryMode": "steer",
+              "status": "read",
+              "provider": null,
+              "providerReceipt": null,
+              "errorCode": null,
+              "errorDetail": null,
+              "idempotencyKey": "r-20261102-033035-8d7a8d-caja-responde",
+              "createdAt": "2026-11-02T03:30:41.258Z",
+              "deliveredAt": "2026-11-02T03:30:42.484Z",
+              "deliveredSession": null,
+              "deliveredVia": "inspect",
+              "readAt": "2026-11-02T03:30:42.484Z",
+              "repliedAt": null,
+              "failedAt": null,
+              "expiresAt": "2026-11-03T03:30:41.258Z",
+              "receipt": {
+                "message_id": "374eacea-cf74-4022-93d5-3e451bbb90cf",
+                "status": "read",
+                "ticks": "read",
+                "sent_at": "2026-11-02T03:30:41.258Z",
+                "delivered_at": "2026-11-02T03:30:42.484Z",
+                "read_at": "2026-11-02T03:30:42.484Z",
+                "replied_at": null,
+                "failed_at": null,
+                "error_code": null,
+                "expires_at": "2026-11-03T03:30:41.258Z"
+              }
+            }
+          ]
+        },
+        "durationMs": 2,
+        "at": "2026-11-02T03:30:45.529Z"
+      },
+      "n": 27,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.531Z"
+    },
+    {
+      "actor": "reparto",
+      "kind": "concord",
+      "title": "Reparto ofrece el relevo a Revisión",
+      "detail": "Handoff con evidencia: qué cambió, pruebas y supuestos.",
+      "ok": true,
+      "call": {
+        "agentId": "reparto",
+        "tool": "transfer_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "action": "offer",
+          "to_agent_id": "revision",
+          "expected_version": 1,
+          "what_changed": "Envío gratis con `>=` en el umbral; incluye el arreglo del cupón de T-CUPON.",
+          "changed_files": [
+            "src/totales.js"
+          ],
+          "tests_run": [
+            "node --test-reporter=tap tests/totales.test.js → 4 de 4 pruebas pasan"
+          ],
+          "assumptions": [
+            "$500 exactos cuentan como «desde $500»."
+          ],
+          "next_steps": [
+            "Revisión vuelve a correr las pruebas y cierra."
+          ]
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\noffer T-ENVIO; status handoff_offered, version 2.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "action": "offer",
+          "task_id": "T-ENVIO",
+          "status": "handoff_offered",
+          "version": 2,
+          "updated_at": "2026-11-02T03:30:45.535Z",
+          "agent_id": "reparto",
+          "assigned_agent_id": "revision",
+          "lease_expires_at": null,
+          "ownership_event_id": 1,
+          "handoff_id": 2,
+          "delivery_status": "pending",
+          "from_agent_id": "reparto",
+          "to_agent_id": "revision"
+        },
+        "durationMs": 17,
+        "at": "2026-11-02T03:30:45.533Z"
+      },
+      "n": 28,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.550Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Revisión acepta el relevo",
+      "detail": "Ahora la tarea es suya.",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "transfer_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "action": "accept",
+          "expected_version": 2
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\naccept T-ENVIO; status active, version 3.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "action": "accept",
+          "task_id": "T-ENVIO",
+          "status": "active",
+          "version": 3,
+          "updated_at": "2026-11-02T03:30:45.558Z",
+          "agent_id": "revision",
+          "assigned_agent_id": null,
+          "lease_expires_at": null,
+          "ownership_event_id": 2,
+          "handoff_id": 2,
+          "delivery_status": "accepted",
+          "from_agent_id": "reparto",
+          "to_agent_id": "revision"
+        },
+        "durationMs": 22,
+        "at": "2026-11-02T03:30:45.552Z"
+      },
+      "n": 29,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.575Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Un segundo «aceptar» llega tarde",
+      "detail": "Reintento simultáneo (#2) con la misma versión. Concord lo rechaza: el traspaso ya no está pendiente.",
+      "ok": false,
+      "call": {
+        "agentId": "revision",
+        "tool": "transfer_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "action": "accept",
+          "expected_version": 2
+        },
+        "ok": false,
+        "text": "Task T-ENVIO has no assignment or handoff to accept.",
+        "structured": null,
+        "durationMs": 23,
+        "at": "2026-11-02T03:30:45.552Z"
+      },
+      "n": 30,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.577Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Revisión lee todo el contexto",
+      "detail": "Evidencia del handoff, notas y 2 cambio(s) de dueño en el historial.",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "inspect_work",
+        "args": {
+          "task_id": "T-ENVIO"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nT-ENVIO; status active, version 3, 1 update(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "task",
+          "task": {
+            "taskId": "T-ENVIO",
+            "title": "Envío gratis también en pedidos de exactamente $500",
+            "owner": "laboratorio-relevo",
+            "agent": "actor-demo",
+            "branch": null,
+            "worktree": null,
+            "expectedFiles": [
+              "src/totales.js"
+            ],
+            "modules": [
+              "checkout"
+            ],
+            "domains": [
+              "promociones"
+            ],
+            "riskTags": [],
+            "notes": null,
+            "status": "active",
+            "parentTaskId": null,
+            "agentId": "revision",
+            "version": 3,
+            "assignedAgentId": null,
+            "leaseExpiresAt": null,
+            "createdAt": "2026-11-02T03:30:40.258Z",
+            "updatedAt": "2026-11-02T03:30:45.558Z"
+          },
+          "owner_liveness": "live",
+          "updates": [
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "kind": "intent",
+              "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500.",
+              "agent": "reparto",
+              "createdAt": "2026-11-02T03:30:43.429Z"
+            }
+          ],
+          "latest_handoff": {
+            "id": 2,
+            "taskId": "T-ENVIO",
+            "status": "in_progress",
+            "changedFiles": [
+              "src/totales.js"
+            ],
+            "whatChanged": "Envío gratis con `>=` en el umbral; incluye el arreglo del cupón de T-CUPON.",
+            "testsRun": [
+              "node --test-reporter=tap tests/totales.test.js → 4 de 4 pruebas pasan"
+            ],
+            "knownRisks": [],
+            "assumptions": [
+              "$500 exactos cuentan como «desde $500»."
+            ],
+            "decisions": [],
+            "guardrailsChecked": [],
+            "needsReviewFrom": [],
+            "nextSteps": [
+              "Revisión vuelve a correr las pruebas y cierra."
+            ],
+            "fromAgentId": "reparto",
+            "toAgentId": "revision",
+            "deliveryStatus": "accepted",
+            "expiresAt": null,
+            "resolvedAt": "2026-11-02T03:30:45.558Z",
+            "taskVersion": 2,
+            "resolutionReason": null,
+            "reportedOutcome": null,
+            "createdAt": "2026-11-02T03:30:45.535Z"
+          },
+          "latest_review": null,
+          "pending_handoff": null,
+          "ownership_history": [
+            {
+              "id": 1,
+              "taskId": "T-ENVIO",
+              "transition": "offer_handoff",
+              "actorAgentId": "reparto",
+              "fromAgentId": "reparto",
+              "toAgentId": "revision",
+              "fromStatus": "active",
+              "toStatus": "handoff_offered",
+              "fromVersion": 1,
+              "toVersion": 2,
+              "reason": null,
+              "createdAt": "2026-11-02T03:30:45.536Z"
+            },
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "transition": "accept_handoff",
+              "actorAgentId": "revision",
+              "fromAgentId": "reparto",
+              "toAgentId": "revision",
+              "fromStatus": "handoff_offered",
+              "toStatus": "active",
+              "fromVersion": 2,
+              "toVersion": 3,
+              "reason": null,
+              "createdAt": "2026-11-02T03:30:45.559Z"
+            }
+          ],
+          "overlaps": [],
+          "messages": []
+        },
+        "durationMs": 5,
+        "at": "2026-11-02T03:30:45.579Z"
+      },
+      "n": 31,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.584Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "tests",
+      "title": "Revisión vuelve a correr las pruebas",
+      "detail": "4 de 4 pruebas pasan",
+      "ok": true,
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 0,
+        "passed": 4,
+        "failed": 0,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 137
+      },
+      "n": 32,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.724Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Revisión deja un hallazgo en T-CUPON",
+      "detail": "Puede anotar hallazgos en una tarea ajena, no decisiones.",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "update_work",
+        "args": {
+          "task_id": "T-CUPON",
+          "kind": "finding",
+          "content": "Verificado junto con T-ENVIO: 4 de 4 pruebas pasan."
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nRecorded finding for T-CUPON.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "operation": "record",
+          "update_id": 3,
+          "task_id": "T-CUPON",
+          "kind": "finding",
+          "content": "Verificado junto con T-ENVIO: 4 de 4 pruebas pasan.",
+          "agent": "revision",
+          "created_at": "2026-11-02T03:30:45.727Z",
+          "task_updated_at": "2026-11-02T03:30:45.727Z"
+        },
+        "durationMs": 6,
+        "at": "2026-11-02T03:30:45.725Z"
+      },
+      "n": 33,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.731Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Revisión consulta T-ENVIO",
+      "detail": "Estado active, versión 3. Las transiciones exigen la versión vigente.",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "inspect_work",
+        "args": {
+          "task_id": "T-ENVIO"
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nT-ENVIO; status active, version 3, 1 update(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "task",
+          "task": {
+            "taskId": "T-ENVIO",
+            "title": "Envío gratis también en pedidos de exactamente $500",
+            "owner": "laboratorio-relevo",
+            "agent": "actor-demo",
+            "branch": null,
+            "worktree": null,
+            "expectedFiles": [
+              "src/totales.js"
+            ],
+            "modules": [
+              "checkout"
+            ],
+            "domains": [
+              "promociones"
+            ],
+            "riskTags": [],
+            "notes": null,
+            "status": "active",
+            "parentTaskId": null,
+            "agentId": "revision",
+            "version": 3,
+            "assignedAgentId": null,
+            "leaseExpiresAt": null,
+            "createdAt": "2026-11-02T03:30:40.258Z",
+            "updatedAt": "2026-11-02T03:30:45.558Z"
+          },
+          "owner_liveness": "live",
+          "updates": [
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "kind": "intent",
+              "content": "Releer src/totales.js (ya trae el arreglo del cupón) y cambiar `>` por `>=` en el umbral de envío gratis. Prueba objetivo: pedido de exactamente $500.",
+              "agent": "reparto",
+              "createdAt": "2026-11-02T03:30:43.429Z"
+            }
+          ],
+          "latest_handoff": {
+            "id": 2,
+            "taskId": "T-ENVIO",
+            "status": "in_progress",
+            "changedFiles": [
+              "src/totales.js"
+            ],
+            "whatChanged": "Envío gratis con `>=` en el umbral; incluye el arreglo del cupón de T-CUPON.",
+            "testsRun": [
+              "node --test-reporter=tap tests/totales.test.js → 4 de 4 pruebas pasan"
+            ],
+            "knownRisks": [],
+            "assumptions": [
+              "$500 exactos cuentan como «desde $500»."
+            ],
+            "decisions": [],
+            "guardrailsChecked": [],
+            "needsReviewFrom": [],
+            "nextSteps": [
+              "Revisión vuelve a correr las pruebas y cierra."
+            ],
+            "fromAgentId": "reparto",
+            "toAgentId": "revision",
+            "deliveryStatus": "accepted",
+            "expiresAt": null,
+            "resolvedAt": "2026-11-02T03:30:45.558Z",
+            "taskVersion": 2,
+            "resolutionReason": null,
+            "reportedOutcome": null,
+            "createdAt": "2026-11-02T03:30:45.535Z"
+          },
+          "latest_review": null,
+          "pending_handoff": null,
+          "ownership_history": [
+            {
+              "id": 1,
+              "taskId": "T-ENVIO",
+              "transition": "offer_handoff",
+              "actorAgentId": "reparto",
+              "fromAgentId": "reparto",
+              "toAgentId": "revision",
+              "fromStatus": "active",
+              "toStatus": "handoff_offered",
+              "fromVersion": 1,
+              "toVersion": 2,
+              "reason": null,
+              "createdAt": "2026-11-02T03:30:45.536Z"
+            },
+            {
+              "id": 2,
+              "taskId": "T-ENVIO",
+              "transition": "accept_handoff",
+              "actorAgentId": "revision",
+              "fromAgentId": "reparto",
+              "toAgentId": "revision",
+              "fromStatus": "handoff_offered",
+              "toStatus": "active",
+              "fromVersion": 2,
+              "toVersion": 3,
+              "reason": null,
+              "createdAt": "2026-11-02T03:30:45.559Z"
+            }
+          ],
+          "overlaps": [],
+          "messages": []
+        },
+        "durationMs": 2,
+        "at": "2026-11-02T03:30:45.732Z"
+      },
+      "n": 34,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.734Z"
+    },
+    {
+      "actor": "revision",
+      "kind": "concord",
+      "title": "Revisión cierra T-ENVIO",
+      "detail": "Cierre con resultado medido y su procedencia.",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "finish_work",
+        "args": {
+          "task_id": "T-ENVIO",
+          "expected_version": 3,
+          "outcome": "complete",
+          "what_changed": "Revisado: cupón y envío gratis corregidos en src/totales.js.",
+          "changed_files": [
+            "src/totales.js"
+          ],
+          "tests_run": [
+            "node --test-reporter=tap tests/totales.test.js → 4 de 4 pruebas pasan"
+          ],
+          "reported_outcome": {
+            "source": "review",
+            "acceptance": "accepted",
+            "integration": "passed"
+          },
+          "provenance": [
+            {
+              "field": "reported_outcome",
+              "source": "node --test en la corrida r-20261102-033035-8d7a8d"
+            }
+          ]
+        },
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\nFinished T-ENVIO; status complete, version 4.",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "task_id": "T-ENVIO",
+          "status": "complete",
+          "version": 4,
+          "updated_at": "2026-11-02T03:30:45.738Z",
+          "agent_id": "revision",
+          "assigned_agent_id": null,
+          "lease_expires_at": null,
+          "outcome": "complete",
+          "handoff_id": 3,
+          "review_ready": false
+        },
+        "durationMs": 6,
+        "at": "2026-11-02T03:30:45.735Z"
+      },
+      "n": 35,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.742Z"
+    },
+    {
+      "actor": "relevo",
+      "kind": "concord",
+      "title": "Estado final del workspace",
+      "detail": "0 choque(s) activo(s); 1 tarea(s) «lista para revisión» (T-CUPON: cerrarla le toca a su dueño o a una persona).",
+      "ok": true,
+      "call": {
+        "agentId": "revision",
+        "tool": "inspect_work",
+        "args": {},
+        "ok": true,
+        "text": "Workspace: ws_<workspace-de-la-corrida> (<corrida>\\concord\\workspace)\n0 active task(s), 0 overlap(s), 3 registered agent(s).",
+        "structured": {
+          "workspace_id": "ws_<workspace-de-la-corrida>",
+          "repo_root": "<corrida>\\concord\\workspace",
+          "scope": "workspace",
+          "presence": [
+            {
+              "agentId": "revision",
+              "kind": "actor-demo",
+              "owner": null,
+              "summary": null,
+              "status": "active",
+              "liveness": "live",
+              "lastSeen": "2026-11-02T03:30:45.738Z",
+              "ageSeconds": 0
+            },
+            {
+              "agentId": "reparto",
+              "kind": "actor-demo",
+              "owner": "laboratorio-relevo",
+              "summary": "Envío gratis también en pedidos de exactamente $500",
+              "status": "active",
+              "liveness": "live",
+              "lastSeen": "2026-11-02T03:30:45.538Z",
+              "ageSeconds": 0
+            },
+            {
+              "agentId": "caja",
+              "kind": "actor-demo",
+              "owner": "laboratorio-relevo",
+              "summary": "El cupón ESPIGA10 no debe descontar el envío",
+              "status": "active",
+              "liveness": "live",
+              "lastSeen": "2026-11-02T03:30:42.471Z",
+              "ageSeconds": 3
+            }
+          ],
+          "active": [],
+          "overlaps": [],
+          "stale_claims": [],
+          "review_ready": [
+            {
+              "taskId": "T-CUPON",
+              "testsCount": 1,
+              "guardrailsCount": 0,
+              "openQuestionCount": 0
+            }
+          ],
+          "open_questions": [],
+          "communications": [
+            {
+              "agentId": "caja",
+              "promptable": false,
+              "provider": null,
+              "capabilities": [],
+              "awaitingUserSince": null
+            },
+            {
+              "agentId": "reparto",
+              "promptable": false,
+              "provider": null,
+              "capabilities": [],
+              "awaitingUserSince": null
+            },
+            {
+              "agentId": "revision",
+              "promptable": false,
+              "provider": null,
+              "capabilities": [],
+              "awaitingUserSince": null
+            }
+          ]
+        },
+        "durationMs": 2,
+        "at": "2026-11-02T03:30:45.744Z"
+      },
+      "n": 36,
+      "lane": "concord",
+      "phase": "cierre",
+      "at": "2026-11-02T03:30:45.746Z"
+    }
+  ],
+  "lanes": {
+    "control": {
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 1,
+        "passed": 3,
+        "failed": 1,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": false,
+            "reason": "Expected values to be strictly deep-equal:\n+ actual - expected\n{\n+   descuento: 27.9,\n-   descuento: 20,\nenvio: 79,\nsubtotal: 200,\n+   total: 251.1"
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 160
+      },
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..eccee6f 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -7,7 +7,7 @@ export const CUPONES = { ESPIGA10: 0.1 };\n \n export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n-  const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n+  const envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n   const descuento = redondear((subtotal + envio) * tasa);\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };",
+      "lostFixes": [
+        "Cupón sin descontar envío"
+      ]
+    },
+    "concord": {
+      "tests": {
+        "command": "node --test-reporter=tap tests/totales.test.js",
+        "exitCode": 0,
+        "passed": 4,
+        "failed": 0,
+        "cases": [
+          {
+            "name": "el cupón ESPIGA10 no descuenta el envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de exactamente $500 tiene envío gratis",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un pedido de $475 sigue pagando envío",
+            "ok": true,
+            "reason": null
+          },
+          {
+            "name": "un cupón desconocido no descuenta nada",
+            "ok": true,
+            "reason": null
+          }
+        ],
+        "durationMs": 137
+      },
+      "diff": "diff --git a/src/totales.js b/src/totales.js\nindex c475a3b..275a9c2 100644\n--- a/src/totales.js\n+++ b/src/totales.js\n@@ -7,9 +7,9 @@ export const CUPONES = { ESPIGA10: 0.1 };\n \n export function calcularTotal(pedido) {\n   const subtotal = pedido.productos.reduce((suma, p) => suma + p.precio * p.cantidad, 0);\n-  const envio = subtotal > UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n+  const envio = subtotal >= UMBRAL_ENVIO_GRATIS ? 0 : ENVIO_BASE;\n   const tasa = CUPONES[pedido.cupon] ?? 0;\n-  const descuento = redondear((subtotal + envio) * tasa);\n+  const descuento = redondear(subtotal * tasa); // el cupón no aplica al envío\n   return { subtotal, envio, descuento, total: redondear(subtotal + envio - descuento) };\n }",
+      "lostFixes": []
+    }
+  },
+  "checks": [
+    {
+      "id": "control-pierde-cambio",
+      "label": "Sin coordinar, un arreglo se pierde sin que git avise",
+      "passed": true,
+      "detail": "Perdido: Cupón sin descontar envío. Pruebas: 3 de 4 pruebas pasan."
+    },
+    {
+      "id": "concord-detecta-choque",
+      "label": "Concord detecta el choque al reclamar",
+      "passed": true,
+      "detail": "1 choque(s) reportado(s) por start_work."
+    },
+    {
+      "id": "concord-no-bloquea",
+      "label": "El aviso no es un candado: el reclamo con choque se acepta",
+      "passed": true,
+      "detail": "Evitar la edición depende de la guardia (concord check) y de la política del agente."
+    },
+    {
+      "id": "guardia",
+      "label": "concord check frena antes y libera después",
+      "passed": true,
+      "detail": "Códigos de salida: 1 → 0."
+    },
+    {
+      "id": "mensajes",
+      "label": "Mensaje y respuesta llegan con acuse de lectura",
+      "passed": true,
+      "detail": "Entrega «queued_pull» (cola, no push); estados: read / read."
+    },
+    {
+      "id": "recuperacion",
+      "label": "Tras la caída, la nueva sesión recupera el plan",
+      "passed": true,
+      "detail": "1 nota(s) recuperada(s). Presencia tras la caída: «live»."
+    },
+    {
+      "id": "traspaso-duplicado",
+      "label": "Un «aceptar» duplicado no duplica el traspaso",
+      "passed": true,
+      "detail": "Task T-ENVIO has no assignment or handoff to accept."
+    },
+    {
+      "id": "concord-todo-verde",
+      "label": "Con Concord, ambos arreglos sobreviven y las pruebas pasan",
+      "passed": true,
+      "detail": "4 de 4 pruebas pasan"
+    },
+    {
+      "id": "aislamiento",
+      "label": "Sin red y sin tocar el HOME real",
+      "passed": true,
+      "detail": "6 procesos de Concord; 0 intentos de red; 0 archivo(s) en el HOME falso."
+    }
+  ],
+  "artifacts": {
+    "handoffMd": "# Handoff: T-ENVIO — Envío gratis también en pedidos de exactamente $500\n\n**Status:** complete\n**Delivery:** recorded\n**From agent:** revision\n**To agent:** not offered\n**Task version:** 4\n**Expires:** not set\n**Branch:** unknown\n\n## What changed\n\nRevisado: cupón y envío gratis corregidos en src/totales.js.\n\n## Reported outcome\n\n- Source: review\n- Acceptance: accepted\n- Integration: passed\n- Human intervention: 0 ms\n- Rework: 0 ms\n\n## Changed files\n\n- `src/totales.js`\n\n## Tests run\n\n- `node --test-reporter=tap tests/totales.test.js → 4 de 4 pruebas pasan`\n\n## Assumptions\n\n_None_\n\n## Decisions\n\n_None_\n\n## Known risks\n\n_None_\n\n## Guardrails checked\n\n_None_\n\n## Needs review from\n\n_None_\n\n## Next steps\n\n_None_\n",
+    "reviewPacketMd": "# Review Packet: T-CUPON — El cupón ESPIGA10 no debe descontar el envío\n\n## Plan\n\nEl cupón ESPIGA10 descuenta solo el subtotal de productos.\n\n## Files touched\n\n- `src/totales.js`\n\n## Guardrails checked\n\n_None_\n\n## Decisions\n\n- El envío nunca se descuenta con cupones.\n\n## Reported outcome\n\n_Not reported_\n\n## Tests run\n\n- `node --test-reporter=tap tests/totales.test.js → 3 de 4 pruebas pasan`\n\n## Assumptions\n\n_None_\n\n## Diff size\n\n_Unknown_\n\n## Open questions\n\n_None_\n\n## Provenance\n\n_None_\n",
+    "workStateSummary": "{\n  \"generated_at\": \"2026-11-02T03:30:45.739Z\",\n  \"presence\": [\n    {\n      \"agent_id\": \"revision\",\n      \"kind\": \"actor-demo\",\n      \"owner\": null,\n      \"summary\": null,\n      \"status\": \"active\",\n      \"liveness\": \"live\",\n      \"last_seen\": \"2026-11-02T03:30:45.738Z\",\n      \"age_seconds\": 0\n    },\n    {\n      \"agent_id\": \"reparto\",\n      \"kind\": \"actor-demo\",\n      \"owner\": \"laboratorio-relevo\",\n      \"summary\": \"Envío gratis también en pedidos de exactamente $500\",\n      \"status\": \"active\",\n      \"liveness\": \"live\",\n      \"last_seen\": \"2026-11-02T03:30:45.538Z\",\n      \"age_seconds\": 0\n    },\n    {\n      \"agent_id\": \"caja\",\n      \"kind\": \"actor-demo\",\n      \"owner\": \"laboratorio-relevo\",\n      \"summary\": \"El cupón ESPIGA10 no debe descontar el envío\",\n      \"status\": \"active\",\n      \"liveness\": \"live\",\n      \"last_seen\": \"2026-11-02T03:30:42.471Z\",\n      \"age_seconds\": 3\n    }\n  ],\n  \"tasks\": [\n    {\n      \"task_id\": \"T-CUPON\",\n      \"title\": \"El cupón ESPIGA10 no debe descontar el envío\",\n      \"status\": \"review_ready\",\n      \"agent\": \"actor-demo\",\n      \"agent_id\": \"caja\",\n      \"assigned_agent_id\": null,\n      \"version\": 2,\n      \"updated_at\": \"2026-11-02T03:30:45.727Z\",\n      \"lease_expires_at\": null,\n      \"owner\": \"laboratorio-relevo\",\n      \"branch\": null,\n      \"parent_task_id\": null,\n      \"modules\": [\n        \"checkout\"\n      ],\n      \"domains\": [\n        \"promociones\"\n      ],\n      \"expected_files\": [\n        \"src/totales.js\"\n      ]\n    },\n    {\n      \"task_id\": \"T-ENVIO\",\n      \"title\": \"Envío gratis también en pedidos de exactamente $500\",\n      \"status\": \"complete\",\n      \"agent\": \"actor-demo\",\n      \"agent_id\": \"revision\",\n      \"assigned_agent_id\": null,\n      \"version\": 4,\n      \"updated_at\": \"2026-11-02T03:30:45.738Z\",\n      \"lease_expires_at\": null,\n      \"owner\": \"laboratorio-relevo\",\n      \"branch\": null,\n      \"parent_task_id\": null,\n      \"modules\": [\n        \"checkout\"\n      ],\n      \"domains\": [\n        \"promociones\"\n      ],\n      \"expected_files\": [\n        \"src/totales.js\"\n      ]\n    }\n  ]\n}\n",
+    "eventsCount": 11
+  },
+  "isolation": {
+    "networkAttempts": [],
+    "homeFiles": [],
+    "concordProcesses": 6
+  },
+  "error": null
+}

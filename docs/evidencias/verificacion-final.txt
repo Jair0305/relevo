@@ -1,0 +1,127 @@
+
+> relevo-lab@0.1.0 verify
+> npm run check && npm test && npm run browser-check
+
+
+> relevo-lab@0.1.0 check
+> tsc -p tsconfig.json
+
+
+> relevo-lab@0.1.0 test
+> node --test --test-concurrency=1 "test/**/*.test.ts"
+
+TAP version 13
+# Subtest: Concord 0.19.0 en el sandbox de Relevo
+    # Subtest: detecta el choque de reserva, no lo bloquea, y concord check lo hace cumplir
+    ok 1 - detecta el choque de reserva, no lo bloquea, y concord check lo hace cumplir
+      ---
+      duration_ms: 4927.287
+      type: 'test'
+      ...
+    # Subtest: entrega mensajes por cola con acuse, y la bandeja es privada
+    ok 2 - entrega mensajes por cola con acuse, y la bandeja es privada
+      ---
+      duration_ms: 1841.4784
+      type: 'test'
+      ...
+    # Subtest: una sesión nueva recupera lo anotado antes de que la anterior se cayera
+    ok 3 - una sesión nueva recupera lo anotado antes de que la anterior se cayera
+      ---
+      duration_ms: 1930.548
+      type: 'test'
+      ...
+    # Subtest: el relevo exige versión vigente, rechaza el duplicado y deja historial
+    ok 4 - el relevo exige versión vigente, rechaza el duplicado y deja historial
+      ---
+      duration_ms: 1892.5238
+      type: 'test'
+      ...
+    # Subtest: el sandbox impide que Concord salga de la carpeta de la corrida
+    ok 5 - el sandbox impide que Concord salga de la carpeta de la corrida
+      ---
+      duration_ms: 428.171
+      type: 'test'
+      ...
+    # Subtest: la guardia de red bloquea fetch y sockets pero deja pasar URLs data:
+    ok 6 - la guardia de red bloquea fetch y sockets pero deja pasar URLs data:
+      ---
+      duration_ms: 149.8759
+      type: 'test'
+      ...
+    1..6
+ok 1 - Concord 0.19.0 en el sandbox de Relevo
+  ---
+  duration_ms: 11171.0452
+  type: 'suite'
+  ...
+# Subtest: servidor de Relevo
+    # Subtest: rechaza hosts ajenos, escrituras sin intención y orígenes cruzados
+    ok 1 - rechaza hosts ajenos, escrituras sin intención y orígenes cruzados
+      ---
+      duration_ms: 36.4496
+      type: 'test'
+      ...
+    # Subtest: solo sirve archivos de su lista y con CSP
+    ok 2 - solo sirve archivos de su lista y con CSP
+      ---
+      duration_ms: 11.7435
+      type: 'test'
+      ...
+    # Subtest: en modo repetición no lanza ni borra corridas
+    ok 3 - en modo repetición no lanza ni borra corridas
+      ---
+      duration_ms: 6.7208
+      type: 'test'
+      ...
+    # Subtest: rechaza una URL malformada sin interrumpir el servidor
+    ok 4 - rechaza una URL malformada sin interrumpir el servidor
+      ---
+      duration_ms: 6.5454
+      type: 'test'
+      ...
+    # Subtest: ejecuta una corrida real completa y la guarda sin rutas locales
+    ok 5 - ejecuta una corrida real completa y la guarda sin rutas locales
+      ---
+      duration_ms: 10578.0213
+      type: 'test'
+      ...
+    # Subtest: reiniciar borra solo data/runs
+    ok 6 - reiniciar borra solo data/runs
+      ---
+      duration_ms: 11.5363
+      type: 'test'
+      ...
+    1..6
+ok 2 - servidor de Relevo
+  ---
+  duration_ms: 10651.9835
+  type: 'suite'
+  ...
+1..2
+# tests 12
+# suites 2
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 23203.8459
+
+> relevo-lab@0.1.0 browser-check
+> node scripts/browser-check.ts
+
+✓ Abre con la repetición capturada — Etiqueta: Repetición
+✓ El primer Tab llega al enlace para saltar — Saltar al contenido
+✓ La corrida real termina en la página — Etiqueta final: Corrida local
+✓ Comprobaciones de la corrida — 9/9 cumplidas
+✓ Marcador: sin coordinar pierde, con Concord no — 3/4pruebas pasan vs 4/4pruebas pasan
+✓ Se ven todos los pasos — 36 pasos en la línea de tiempo
+✓ El detalle muestra la respuesta real de Concord — Texto contiene «same file(s): src/totales.js»
+✓ Todos los controles tienen nombre accesible — 0 sin nombre
+✓ Un solo h1 y landmarks principales — h1: 1
+✓ Borrar corridas vuelve a la repetición — Aviso visible y vista de captura
+✓ Sin errores en consola — ninguno
+✓ Sin desbordamiento horizontal en móvil — 0 px extra
+✓ Error visible si el servidor no responde — Aviso con botón Reintentar
+
+13/13 verificaciones de navegador correctas.
